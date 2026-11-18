@@ -1,0 +1,1023 @@
+import base64
+import json
+import os
+import re
+import time
+
+from urllib.parse import (
+    parse_qs,
+    unquote,
+    urljoin,
+    urlparse,
+    urlencode,
+    urlunparse,
+)
+
+import requests
+from bs4 import BeautifulSoup
+
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+TIMEOUT = 10
+YOU_TIMEOUT = 60
+RETRIES = 2
+
+DUCKDUCKGO_URL = "https://html.duckduckgo.com/html/"
+BING_URL = "https://www.bing.com/search"
+
+YOU_MCP_URL = "https://api.you.com/mcp?profile=free"
+YOU_MCP_PROTOCOL_VERSION = "2026-07-28"
+YOU_CLIENT_NAME = "Armitage"
+YOU_CLIENT_VERSION = "1.0"
+
+YOU_DEFAULT_RESULTS = 10
+YOU_MAX_RESULTS = 20
+
+# Старые поисковики остаются доступными как резервный вариант.
+# Автоматический переход к ним выключен, поскольку проверка
+# показала, что они могут возвращать нерелевантные результаты.
+#
+# Для включения резервного поиска:
+# set ARMITAGE_ENABLE_LEGACY_SEARCH_FALLBACK=1
+
+ENABLE_LEGACY_FALLBACK = (
+    os.getenv(
+        "ARMITAGE_ENABLE_LEGACY_SEARCH_FALLBACK",
+        "0",
+    ).strip() == "1"
+)
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/154.0.0.0 Safari/537.36"
+    ),
+    "Accept": (
+        "text/html,application/xhtml+xml,"
+        "application/xml;q=0.9,*/*;q=0.8"
+    ),
+    "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+}
+
+
+# ============================================================
+# URL NORMALIZATION
+# ============================================================
+
+def decode_bing_url(url):
+    """Извлекает исходный адрес из перенаправления Bing."""
+
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+
+    hostname = (parsed.hostname or "").lower()
+
+    if not (
+        hostname == "bing.com"
+        or hostname.endswith(".bing.com")
+    ):
+        return url
+
+    parameters = parse_qs(parsed.query)
+    values = parameters.get("u", [])
+
+    if not values:
+        return None
+
+    encoded = values[0].strip()
+
+    if encoded.startswith("a1"):
+        encoded = encoded[2:]
+
+    if not encoded:
+        return None
+
+    try:
+        padding = "=" * (-len(encoded) % 4)
+
+        decoded = base64.urlsafe_b64decode(
+            encoded + padding
+        ).decode("utf-8", errors="strict")
+
+        return unquote(decoded.strip())
+
+    except (
+        ValueError,
+        UnicodeDecodeError,
+    ):
+        return None
+
+
+def normalize_result_url(url):
+    """Удаляет поисковые перенаправления и проверяет URL."""
+
+    if not isinstance(url, str) or not url.strip():
+        return None
+
+    url = urljoin(
+        "https://html.duckduckgo.com",
+        url.strip(),
+    )
+
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+
+    hostname = (parsed.hostname or "").lower()
+
+    # DuckDuckGo redirect.
+    if (
+        hostname == "duckduckgo.com"
+        or hostname.endswith(".duckduckgo.com")
+    ):
+        parameters = parse_qs(parsed.query)
+        redirect_values = parameters.get("uddg", [])
+
+        if not redirect_values:
+            return None
+
+        url = unquote(redirect_values[0])
+
+    # Bing redirect.
+    url = decode_bing_url(url)
+
+    if not url:
+        return None
+
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+
+    scheme = parsed.scheme.lower()
+    hostname = (parsed.hostname or "").lower()
+
+    if scheme not in {"http", "https"} or not hostname:
+        return None
+
+    blocked_hosts = {
+        "bing.com",
+        "www.bing.com",
+        "duckduckgo.com",
+        "www.duckduckgo.com",
+        "google.com",
+        "www.google.com",
+        "api.you.com",
+        "you.com",
+    }
+
+    if hostname in blocked_hosts:
+        return None
+
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        return None
+
+    if hostname.endswith(".local"):
+        return None
+
+    # Удаляем типичные параметры отслеживания.
+    tracking_prefixes = (
+        "utm_",
+    )
+
+    tracking_parameters = {
+        "fbclid",
+        "gclid",
+        "msclkid",
+        "msockid",
+    }
+
+    query_items = []
+
+    for key, value in parse_qs(
+        parsed.query,
+        keep_blank_values=True,
+    ).items():
+
+        if key.lower() in tracking_parameters:
+            continue
+
+        if any(
+            key.lower().startswith(prefix)
+            for prefix in tracking_prefixes
+        ):
+            continue
+
+        for item in value:
+            query_items.append((key, item))
+
+    clean_query = urlencode(query_items)
+
+    return urlunparse((
+        scheme,
+        parsed.netloc,
+        parsed.path,
+        parsed.params,
+        clean_query,
+        "",
+    ))
+
+
+# ============================================================
+# DUCKDUCKGO PARSER
+# ============================================================
+
+def parse_duckduckgo(html, max_results):
+    """Извлекает органические результаты DuckDuckGo."""
+
+    soup = BeautifulSoup(html, "html.parser")
+    results = []
+    seen = set()
+
+    selectors = [
+        ".result",
+        ".web-result",
+    ]
+
+    items = []
+
+    for selector in selectors:
+        items = soup.select(selector)
+
+        if items:
+            break
+
+    for item in items:
+        link = item.select_one("a.result__a")
+
+        if not link:
+            link = item.select_one("h2 a")
+
+        if not link:
+            continue
+
+        title = link.get_text(
+            " ",
+            strip=True,
+        )
+
+        href = link.get("href")
+
+        if not title or not href:
+            continue
+
+        clean_url = normalize_result_url(href)
+
+        if not clean_url:
+            continue
+
+        key = clean_url.casefold()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        snippet_element = item.select_one(
+            ".result__snippet"
+        )
+
+        snippet = (
+            snippet_element.get_text(
+                " ",
+                strip=True,
+            )
+            if snippet_element
+            else ""
+        )
+
+        results.append({
+            "title": title,
+            "url": clean_url,
+            "snippet": snippet,
+            "source": "DuckDuckGo",
+        })
+
+        if len(results) >= max_results:
+            break
+
+    return results
+
+
+# ============================================================
+# BING PARSER
+# ============================================================
+
+def parse_bing(html, max_results):
+    """Извлекает органические результаты Bing."""
+
+    soup = BeautifulSoup(html, "html.parser")
+    results = []
+    seen = set()
+
+    for item in soup.select("li.b_algo"):
+        link = item.select_one("h2 a")
+
+        if not link:
+            continue
+
+        title = link.get_text(
+            " ",
+            strip=True,
+        )
+
+        href = link.get("href")
+
+        if not title or not href:
+            continue
+
+        clean_url = normalize_result_url(href)
+
+        if not clean_url:
+            continue
+
+        key = clean_url.casefold()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        snippet_element = item.select_one(
+            ".b_caption p"
+        )
+
+        if not snippet_element:
+            snippet_element = item.select_one("p")
+
+        snippet = (
+            snippet_element.get_text(
+                " ",
+                strip=True,
+            )
+            if snippet_element
+            else ""
+        )
+
+        results.append({
+            "title": title,
+            "url": clean_url,
+            "snippet": snippet,
+            "source": "Bing",
+        })
+
+        if len(results) >= max_results:
+            break
+
+    return results
+
+
+# ============================================================
+# YOU.COM RESPONSE PARSER
+# ============================================================
+
+def parse_you_response(data, max_results):
+    """
+    Разбирает ответ You.com MCP.
+
+    Поддерживает структуру:
+    result.content[].text -> JSON -> results.web[].
+
+    Возвращает совместимый формат:
+    title, url, snippet, source.
+    """
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "Некорректный формат ответа You.com."
+        )
+
+    if data.get("error"):
+        raise RuntimeError(
+            str(data["error"])
+        )
+
+    result = data.get("result", {})
+
+    if not isinstance(result, dict):
+        raise ValueError(
+            "You.com вернул некорректный объект result."
+        )
+
+    if result.get("isError"):
+        messages = []
+
+        for item in result.get("content", []):
+            if isinstance(item, dict):
+                value = item.get("text")
+
+                if value:
+                    messages.append(str(value))
+
+        raise RuntimeError(
+            " ".join(messages) or "Ошибка You.com MCP."
+        )
+
+    content = result.get("content", [])
+
+    if not isinstance(content, list):
+        content = []
+
+    web_results = None
+
+    for item in content:
+
+        if not isinstance(item, dict):
+            continue
+
+        if item.get("type") != "text":
+            continue
+
+        text = item.get("text", "")
+
+        if not isinstance(text, str) or not text.strip():
+            continue
+
+        try:
+            parsed_text = json.loads(text)
+        except json.JSONDecodeError:
+            continue
+
+        if not isinstance(parsed_text, dict):
+            continue
+
+        results_block = parsed_text.get("results", {})
+
+        if isinstance(results_block, dict):
+            web_results = results_block.get("web")
+
+            if isinstance(web_results, list):
+                break
+
+    if web_results is None:
+        # Совместимость на случай изменения структуры API.
+        results_block = result.get("results", {})
+
+        if isinstance(results_block, dict):
+            web_results = results_block.get("web", [])
+
+    if not isinstance(web_results, list):
+        return []
+
+    results = []
+    seen = set()
+
+    for item in web_results:
+
+        if not isinstance(item, dict):
+            continue
+
+        title = str(
+            item.get("title", "")
+        ).strip()
+
+        original_url = str(
+            item.get("url", "")
+        ).strip()
+
+        if not title or not original_url:
+            continue
+
+        clean_url = normalize_result_url(
+            original_url
+        )
+
+        if not clean_url:
+            continue
+
+        key = clean_url.casefold()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        snippet_parts = []
+
+        description = item.get("description")
+
+        if isinstance(description, str) and description.strip():
+            snippet_parts.append(description.strip())
+
+        contents_block = item.get("contents", {})
+
+        if isinstance(contents_block, dict):
+
+            highlights = contents_block.get(
+                "highlights",
+                [],
+            )
+
+            if isinstance(highlights, list):
+
+                for highlight in highlights:
+
+                    if isinstance(highlight, str) and highlight.strip():
+                        snippet_parts.append(
+                            highlight.strip()
+                        )
+
+        snippet = " ".join(snippet_parts)
+
+        # Ограничиваем размер описания.
+        snippet = snippet[:5000]
+
+        results.append({
+            "title": title,
+            "url": clean_url,
+            "snippet": snippet,
+            "source": "You.com",
+        })
+
+        if len(results) >= max_results:
+            break
+
+    return results
+
+
+# ============================================================
+# YOU.COM MCP SEARCH
+# ============================================================
+
+def search_you(query, max_results=YOU_DEFAULT_RESULTS):
+    """
+    Выполняет бесплатный поиск через You.com MCP.
+
+    Использует профиль free без API-ключа.
+
+    Возвращает:
+        [
+            {
+                "title": str,
+                "url": str,
+                "snippet": str,
+                "source": "You.com"
+            }
+        ]
+    """
+
+    if not isinstance(query, str) or not query.strip():
+        return []
+
+    query = query.strip()
+
+    try:
+        max_results = int(max_results)
+    except (TypeError, ValueError):
+        max_results = YOU_DEFAULT_RESULTS
+
+    max_results = max(
+        1,
+        min(max_results, YOU_MAX_RESULTS),
+    )
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+        "MCP-Protocol-Version": YOU_MCP_PROTOCOL_VERSION,
+        "Mcp-Method": "tools/call",
+        "Mcp-Name": "you-search",
+    }
+
+    payload = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "you-search",
+            "arguments": {
+                "query": query,
+                "count": max_results,
+            },
+            "_meta": {
+                "io.modelcontextprotocol/protocolVersion": (
+                    YOU_MCP_PROTOCOL_VERSION
+                ),
+                "io.modelcontextprotocol/clientInfo": {
+                    "name": YOU_CLIENT_NAME,
+                    "version": YOU_CLIENT_VERSION,
+                },
+                "io.modelcontextprotocol/clientCapabilities": {},
+            },
+        },
+    }
+
+    print("Поисковая система: You.com")
+    print(f"Запрос: {query}")
+
+    try:
+        response = requests.post(
+            YOU_MCP_URL,
+            headers=headers,
+            json=payload,
+            timeout=YOU_TIMEOUT,
+        )
+
+        if not response.ok:
+
+            error_text = response.text[:1000]
+
+            raise RuntimeError(
+                f"You.com HTTP {response.status_code}: "
+                f"{error_text}"
+            )
+
+        try:
+            data = response.json()
+
+        except ValueError as error:
+            raise RuntimeError(
+                "You.com вернул ответ, который не является JSON."
+            ) from error
+
+        results = parse_you_response(
+            data,
+            max_results,
+        )
+
+        usage = (
+            data.get("result", {})
+            .get("_meta", {})
+            .get("you/usage", {})
+        )
+
+        if usage:
+            print(
+                "You.com usage:",
+                usage,
+            )
+
+        print(
+            f"You.com: найдено результатов: {len(results)}"
+        )
+
+        return results
+
+    except requests.Timeout as error:
+        raise RuntimeError(
+            "Истекло время ожидания ответа You.com."
+        ) from error
+
+    except requests.RequestException as error:
+        raise RuntimeError(
+            f"Ошибка соединения с You.com: {error}"
+        ) from error
+
+
+# ============================================================
+# INTERNET CONNECTION
+# ============================================================
+
+def internet_available():
+    """Проверяет наличие интернет-соединения."""
+
+    test_urls = (
+        "https://api.you.com",
+        "https://www.google.com",
+    )
+
+    for url in test_urls:
+
+        try:
+            response = requests.get(
+                url,
+                headers=HEADERS,
+                timeout=5,
+                allow_redirects=True,
+            )
+
+            if response.status_code < 500:
+                return True
+
+        except requests.RequestException:
+            continue
+
+    return False
+
+
+# ============================================================
+# LEGACY SEARCH ENGINE REQUEST
+# ============================================================
+
+def request_search_engine(
+    engine_name,
+    url,
+    query,
+    parser,
+    max_results,
+):
+    """Выполняет запрос к резервному поисковому движку."""
+
+    for attempt in range(RETRIES + 1):
+
+        try:
+            response = requests.get(
+                url,
+                params={"q": query},
+                headers=HEADERS,
+                timeout=TIMEOUT,
+            )
+
+            if response.status_code != 200:
+
+                print(
+                    f"{engine_name}: HTTP "
+                    f"{response.status_code}"
+                )
+
+                # Нет смысла повторять запрос при ограничении.
+                if response.status_code == 429:
+                    break
+
+                if attempt < RETRIES:
+                    time.sleep(1)
+
+                continue
+
+            results = parser(
+                response.text,
+                max_results,
+            )
+
+            if results:
+                return results
+
+            print(
+                f"{engine_name}: подходящие ссылки не получены."
+            )
+
+            return []
+
+        except requests.RequestException as error:
+
+            print(
+                f"Ошибка {engine_name}, попытка "
+                f"{attempt + 1}: {error}"
+            )
+
+            if attempt < RETRIES:
+                time.sleep(1)
+
+    return []
+
+
+# ============================================================
+# RESULT DEDUPLICATION
+# ============================================================
+
+def deduplicate_results(results, max_results):
+    """Удаляет повторяющиеся результаты."""
+
+    unique_results = []
+    seen = set()
+
+    for item in results:
+
+        if not isinstance(item, dict):
+            continue
+
+        url = normalize_result_url(
+            item.get("url", "")
+        )
+
+        title = str(
+            item.get("title", "")
+        ).strip()
+
+        if not url or not title:
+            continue
+
+        key = url.casefold()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        unique_results.append({
+            "title": title,
+            "url": url,
+            "snippet": str(
+                item.get("snippet", "")
+            ).strip(),
+            "source": item.get("source", ""),
+        })
+
+        if len(unique_results) >= max_results:
+            break
+
+    return unique_results
+
+
+# ============================================================
+# INTERNET SEARCH
+# ============================================================
+
+def search_internet(query, max_results=10):
+    """
+    Совместимый интернет-поиск для core.py и Executor.
+
+    Основной поисковик:
+        You.com MCP — бесплатный профиль.
+
+    Резервные поисковики:
+        DuckDuckGo;
+        Bing.
+
+    Автоматический переход к старым поисковикам выключен
+    из-за обнаруженной нерелевантной выдачи.
+
+    Для включения резервного поиска используется переменная:
+        ARMITAGE_ENABLE_LEGACY_SEARCH_FALLBACK=1
+
+    Формат результатов совместим с прежней реализацией:
+        title, url.
+
+    Дополнительно возвращаются:
+        snippet, source.
+
+    Найденные страницы не считаются проверенными решениями.
+    """
+
+    if not isinstance(query, str) or not query.strip():
+        return []
+
+    query = query.strip()
+
+    try:
+        max_results = int(max_results)
+    except (TypeError, ValueError):
+        max_results = 10
+
+    max_results = max(
+        1,
+        min(max_results, 50),
+    )
+
+    print(f"Интернет-поиск: {query}")
+
+    if not internet_available():
+
+        print("Интернет недоступен.")
+
+        return []
+
+    results = []
+
+    # --------------------------------------------------------
+    # 1. YOU.COM — PRIMARY SEARCH
+    # --------------------------------------------------------
+
+    try:
+
+        results = search_you(
+            query,
+            max_results=min(
+                max_results,
+                YOU_MAX_RESULTS,
+            ),
+        )
+
+    except Exception as error:
+
+        print(
+            "Ошибка You.com:",
+            error,
+        )
+
+        results = []
+
+    # --------------------------------------------------------
+    # 2. DUCKDUCKGO — LEGACY FALLBACK
+    # --------------------------------------------------------
+
+    if not results and ENABLE_LEGACY_FALLBACK:
+
+        print(
+            "You.com не вернул результаты. "
+            "Пробую резервный поиск DuckDuckGo."
+        )
+
+        results = request_search_engine(
+            "DuckDuckGo",
+            DUCKDUCKGO_URL,
+            query,
+            parse_duckduckgo,
+            max_results,
+        )
+
+    # --------------------------------------------------------
+    # 3. BING — LEGACY FALLBACK
+    # --------------------------------------------------------
+
+    if not results and ENABLE_LEGACY_FALLBACK:
+
+        print(
+            "DuckDuckGo не вернул результаты. "
+            "Пробую резервный поиск Bing."
+        )
+
+        results = request_search_engine(
+            "Bing",
+            BING_URL,
+            query,
+            parse_bing,
+            max_results,
+        )
+
+    # --------------------------------------------------------
+    # 4. DEDUPLICATION
+    # --------------------------------------------------------
+
+    unique_results = deduplicate_results(
+        results,
+        max_results,
+    )
+
+    # --------------------------------------------------------
+    # 5. OUTPUT
+    # --------------------------------------------------------
+
+    print(
+        f"Найдено результатов: {len(unique_results)}"
+    )
+
+    for index, result in enumerate(
+        unique_results,
+        start=1,
+    ):
+
+        print(
+            f"{index}. {result['title']}"
+        )
+
+        print(
+            f"   {result['url']}"
+        )
+
+        if result["snippet"]:
+
+            print(
+                f"   {result['snippet'][:250]}"
+            )
+
+    return unique_results
+
+
+# ============================================================
+# COMPATIBILITY
+# ============================================================
+
+def search_web(query, max_results=10):
+    """Совместимое имя функции интернет-поиска."""
+
+    return search_internet(
+        query,
+        max_results,
+    )
+
+
+# ============================================================
+# TEST
+# ============================================================
+
+if __name__ == "__main__":
+
+    print("================================")
+    print("       INTERNET TEST")
+    print("================================")
+    print()
+
+    print(
+        "Интернет:",
+        "доступен"
+        if internet_available()
+        else "недоступен",
+    )
+
+    print()
+    print("Тестовый поиск: Blender Python API")
+
+    results = search_internet(
+        "Blender Python API official documentation",
+        max_results=5,
+    )
+
+    print()
+
+    if results:
+        print("Результаты получены.")
+    else:
+        print("Результатов нет.")
+
+    print()
+    print("================================")
+    print("       TEST COMPLETED")
+    print("================================")

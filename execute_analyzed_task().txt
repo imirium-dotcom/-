@@ -1,0 +1,295 @@
+def execute_analyzed_task(text, analysis):
+    """
+    Выполняет задачу на основе результата Task Analyzer.
+    """
+
+    intent = analysis.get("intent")
+
+    print()
+    print("================================")
+    print("       TASK EXECUTION")
+    print("================================")
+
+    # ==============================
+    # MEMORY
+    # ==============================
+
+    if intent == "remember":
+
+        goal = analysis.get(
+            "goal",
+            text
+        )
+
+        try:
+
+            remember(
+                "user_memory",
+                goal
+            )
+
+            print(
+                "[CORE] Запомнил."
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка памяти: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # RECALL
+    # ==============================
+
+    if intent == "recall":
+
+        goal = analysis.get(
+            "goal",
+            text
+        )
+
+        try:
+
+            result = get_all_memory()
+
+            print(
+                "[CORE] Память:"
+            )
+
+            print(
+                result
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка чтения памяти: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # FORGET
+    # ==============================
+
+    if intent == "forget":
+
+        goal = analysis.get(
+            "goal",
+            text
+        )
+
+        try:
+
+            result = forget(
+                "user_memory"
+            )
+
+            print(
+                "[CORE] Память очищена."
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка памяти: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # WRITE FILE
+    # ==============================
+
+    if intent == "write_file":
+
+        objects = analysis.get(
+            "objects",
+            []
+        )
+
+        expected_result = analysis.get(
+            "expected_result",
+            {}
+        )
+
+        filename = None
+        content = ""
+
+        for obj in objects:
+
+            if obj.get("type") == "file":
+
+                filename = obj.get(
+                    "name"
+                )
+
+                break
+
+        if expected_result:
+
+            content = expected_result.get(
+                "content",
+                ""
+            )
+
+        if not filename:
+
+            print(
+                "[CORE] Не удалось определить имя файла."
+            )
+
+            return False
+
+        try:
+
+            result = write_file(
+                filename,
+                content
+            )
+
+            print(
+                "[CORE] Файл записан."
+            )
+
+            print(
+                f"[CORE] Результат: {result}"
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка записи файла: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # READ FILE
+    # ==============================
+
+    if intent == "read_file":
+
+        objects = analysis.get(
+            "objects",
+            []
+        )
+
+        filename = None
+
+        for obj in objects:
+
+            if obj.get("type") == "file":
+
+                filename = obj.get(
+                    "name"
+                )
+
+                break
+
+        if not filename:
+
+            print(
+                "[CORE] Не удалось определить имя файла."
+            )
+
+            return False
+
+        try:
+
+            result = read_file(
+                filename
+            )
+
+            print(
+                result
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка чтения файла: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # 3D GENERATION
+    # ==============================
+
+    if intent == "3d_generation":
+
+        try:
+
+            result = execute_capability(
+                "3d_generation"
+            )
+
+            print(
+                f"[CORE] Результат: {result}"
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка 3D: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # VOICE
+    # ==============================
+
+    if intent == "voice":
+
+        try:
+
+            result = listen()
+
+            if result:
+
+                print(
+                    f"[CORE] Распознано: {result}"
+                )
+
+                return True
+
+            print(
+                "[CORE] Речь не распознана."
+            )
+
+            return False
+
+        except Exception as e:
+
+            print(
+                f"[CORE] Ошибка голоса: {e}"
+            )
+
+            return False
+
+    # ==============================
+    # UNKNOWN
+    # ==============================
+
+    print(
+        f"[CORE] Неизвестный тип задачи: {intent}"
+    )
+
+    return False

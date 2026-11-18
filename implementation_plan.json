@@ -1,0 +1,447 @@
+{
+    "plans": [
+        {
+            "capability": "vosk",
+            "solution_capability": "vosk",
+            "solution": {
+                "status": "solution_found",
+                "type": "python_package",
+                "name": "Vosk",
+                "module": "vosk",
+                "command": "python -m pip install vosk",
+                "purpose": "Распознавание речи",
+                "capabilities": [
+                    "vosk",
+                    "распознавание речи",
+                    "голосовой ввод",
+                    "голос",
+                    "речь",
+                    "микрофон",
+                    "работа с микрофоном",
+                    "проверка микрофона",
+                    "speech recognition"
+                ],
+                "implementation": [
+                    "Проверить установку Vosk",
+                    "Подключить модуль",
+                    "Проверить импорт",
+                    "Использовать в voice_input.py"
+                ],
+                "capability": "vosk",
+                "solution_capability": "vosk",
+                "requested_capability": "vosk"
+            },
+            "steps": [
+                {
+                    "action": "check_package",
+                    "capability": "vosk",
+                    "solution": "vosk",
+                    "package": "Vosk"
+                },
+                {
+                    "action": "check_import",
+                    "capability": "vosk",
+                    "solution": "vosk",
+                    "module": "vosk"
+                },
+                {
+                    "action": "connect_module",
+                    "capability": "vosk",
+                    "solution": "vosk",
+                    "module": "vosk"
+                },
+                {
+                    "action": "verify_module",
+                    "capability": "vosk",
+                    "solution": "vosk",
+                    "module": "vosk"
+                }
+            ]
+        },
+        {
+            "capability": "3d_generation",
+            "solution_capability": "3d_generation",
+            "solution": {
+                "status": "solution_found",
+                "type": "external_application",
+                "name": "Blender",
+                "command": "blender",
+                "purpose": "Создание и обработка 3D-моделей",
+                "implementation": [
+                    "Проверить наличие Blender",
+                    "Проверить доступность команды blender",
+                    "Подключить запуск Blender из AI Core",
+                    "Передавать Blender Python-скрипты",
+                    "Создавать 3D-сцену или модель",
+                    "Проверять результат"
+                ],
+                "capability": "3d_generation"
+            },
+            "steps": [
+                {
+                    "action": "check_application",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation",
+                    "application": "Blender",
+                    "command": "blender"
+                },
+                {
+                    "action": "check_command",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation",
+                    "command": "blender"
+                },
+                {
+                    "action": "connect_application",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation",
+                    "application": "Blender"
+                },
+                {
+                    "action": "prepare_blender_script",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation"
+                },
+                {
+                    "action": "execute_blender_script",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation"
+                },
+                {
+                    "action": "verify_blender_result",
+                    "capability": "3d_generation",
+                    "solution": "3d_generation"
+                }
+            ]
+        },
+        {
+            "capability": "files",
+            "solution_capability": "files",
+            "solution": {
+                "capability": "files",
+                "status": "available",
+                "type": "existing_module",
+                "module": "files.py",
+                "functions": [
+                    "read_file",
+                    "write_file",
+                    "list_files"
+                ],
+                "action": "use_existing",
+                "requested_capability": "files",
+                "name": "files"
+            },
+            "steps": [
+                {
+                    "action": "use_existing",
+                    "capability": "files",
+                    "status": "available",
+                    "type": "module",
+                    "module": "files.py",
+                    "functions": [
+                        "read_file",
+                        "write_file",
+                        "list_files"
+                    ],
+                    "resolver_action": "use_existing"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "use_existing",
+            "resolver_status": "available",
+            "resolver_result": {
+                "capability": "files",
+                "status": "available",
+                "type": "module",
+                "module": "files.py",
+                "functions": [
+                    "read_file",
+                    "write_file",
+                    "list_files"
+                ],
+                "action": "use_existing"
+            }
+        },
+        {
+            "capability": "unknown_test_capability",
+            "solution_capability": "unknown_test_capability",
+            "solution": {
+                "capability": "unknown_test_capability",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "unknown_test_capability",
+                "name": "unknown_test_capability"
+            },
+            "steps": [
+                {
+                    "action": "search_solution",
+                    "capability": "unknown_test_capability",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "unknown_test_capability",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "микрофон",
+            "solution_capability": "микрофон",
+            "solution": {
+                "capability": "микрофон",
+                "status": "package_available",
+                "type": "python_package",
+                "solution_found": true,
+                "solution_name": "Vosk",
+                "purpose": "Распознавание речи",
+                "matched_capability": "микрофон",
+                "implementation": [
+                    "Проверить установку Vosk",
+                    "Подключить модуль",
+                    "Проверить импорт",
+                    "Использовать в voice_input.py"
+                ],
+                "package": "vosk",
+                "install_name": "vosk",
+                "solution_command": "python -m pip install vosk",
+                "action": "use_installed_package",
+                "requested_capability": "микрофон",
+                "name": "vosk",
+                "module": "vosk",
+                "command": "python -m pip install vosk"
+            },
+            "steps": [
+                {
+                    "action": "use_installed_package",
+                    "capability": "микрофон",
+                    "status": "package_available",
+                    "type": "python_package",
+                    "solution_found": true,
+                    "solution_name": "Vosk",
+                    "purpose": "Распознавание речи",
+                    "matched_capability": "микрофон",
+                    "implementation": [
+                        "Проверить установку Vosk",
+                        "Подключить модуль",
+                        "Проверить импорт",
+                        "Использовать в voice_input.py"
+                    ],
+                    "package": "vosk",
+                    "install_name": "vosk",
+                    "solution_command": "python -m pip install vosk",
+                    "resolver_action": "use_installed_package"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "use_installed_package",
+            "resolver_status": "package_available",
+            "resolver_result": {
+                "capability": "микрофон",
+                "status": "package_available",
+                "type": "python_package",
+                "solution_found": true,
+                "solution_name": "Vosk",
+                "purpose": "Распознавание речи",
+                "matched_capability": "микрофон",
+                "implementation": [
+                    "Проверить установку Vosk",
+                    "Подключить модуль",
+                    "Проверить импорт",
+                    "Использовать в voice_input.py"
+                ],
+                "package": "vosk",
+                "install_name": "vosk",
+                "solution_command": "python -m pip install vosk",
+                "action": "use_installed_package"
+            }
+        },
+        {
+            "capability": "test_research",
+            "solution_capability": "test_research",
+            "solution": {
+                "capability": "test_research",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "test_research",
+                "name": "test_research"
+            },
+            "steps": [
+                {
+                    "capability": "test_research",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "test_research",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "тестовую возможность test_capability",
+            "solution_capability": "тестовую возможность test_capability",
+            "solution": {
+                "capability": "тестовую возможность test_capability",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "тестовую возможность test_capability",
+                "name": "тестовую возможность test_capability"
+            },
+            "steps": [
+                {
+                    "capability": "тестовую возможность test_capability",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "тестовую возможность test_capability",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "подключение gemini и выполни тестовый запрос к модели",
+            "solution_capability": "подключение gemini и выполни тестовый запрос к модели",
+            "solution": {
+                "capability": "подключение gemini и выполни тестовый запрос к модели",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "подключение gemini и выполни тестовый запрос к модели",
+                "name": "подключение gemini и выполни тестовый запрос к модели"
+            },
+            "steps": [
+                {
+                    "capability": "подключение gemini и выполни тестовый запрос к модели",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "подключение gemini и выполни тестовый запрос к модели",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+            "solution_capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+            "solution": {
+                "capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+                "name": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах"
+            },
+            "steps": [
+                {
+                    "capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "подключение gemini, ничего не меняя в файлахпроверь подключение gemini, ничего не меняя в файлах",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "работу гемени",
+            "solution_capability": "работу гемени",
+            "solution": {
+                "capability": "работу гемени",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "работу гемени",
+                "name": "работу гемени"
+            },
+            "steps": [
+                {
+                    "capability": "работу гемени",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "работу гемени",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        },
+        {
+            "capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+            "solution_capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+            "solution": {
+                "capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution",
+                "requested_capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+                "name": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения"
+            },
+            "steps": [
+                {
+                    "capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+                    "status": "unknown",
+                    "type": "unknown",
+                    "action": "research_solution",
+                    "resolver_action": "search_solution"
+                }
+            ],
+            "plan_source": "capability_resolver",
+            "resolver_action": "search_solution",
+            "resolver_status": "unknown",
+            "resolver_result": {
+                "capability": "доступные инструменты, модули и цепочки выполнения. для каждой возможности установи: распознается ли команда, передается ли она исполнителю, выполняется ли действие и подтверждается ли результат. найди ошибки и разрывы в логике. составь список проблем по приоритету и предложи исправления. ничего не изменяй без проверки и подтверждения. не объявляй действие выполненным, если нет фактического подтверждения",
+                "status": "unknown",
+                "type": "unknown",
+                "action": "search_solution"
+            }
+        }
+    ]
+}

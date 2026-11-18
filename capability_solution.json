@@ -1,0 +1,97 @@
+{
+    "timestamp": "2026-10-06T23:02:31.536218",
+    "solutions": [
+        {
+            "timestamp": "2026-10-06T23:02:31.536210",
+            "capability": "3d_generation",
+            "solution": {
+                "status": "solution_found",
+                "type": "external_application",
+                "name": "Blender",
+                "command": "blender",
+                "purpose": "Создание и обработка 3D-моделей",
+                "capabilities": [
+                    "3d_generation",
+                    "3d",
+                    "3d модель",
+                    "3d моделирование",
+                    "создание 3d",
+                    "создание 3d моделей",
+                    "обработка 3d",
+                    "blender"
+                ],
+                "implementation": [
+                    "Проверить наличие Blender",
+                    "Проверить доступность команды blender",
+                    "Подключить запуск Blender из AI Core",
+                    "Передавать Blender Python-скрипты",
+                    "Создавать 3D-сцену или модель",
+                    "Проверять результат"
+                ],
+                "capability": "3d_generation"
+            },
+            "analysis": {
+                "status": "analyzed",
+                "capability": "3d_generation",
+                "solution_name": "Blender",
+                "solution_type": "external_application",
+                "purpose": "Создание и обработка 3D-моделей",
+                "matched_capability": null,
+                "steps": [
+                    "Проверить наличие Blender",
+                    "Проверить доступность команды blender",
+                    "Подключить запуск Blender из AI Core",
+                    "Передавать Blender Python-скрипты",
+                    "Создавать 3D-сцену или модель",
+                    "Проверять результат"
+                ],
+                "next_action": "prepare_implementation"
+            }
+        },
+        {
+            "timestamp": "2026-10-06T23:02:31.536216",
+            "capability": "vosk",
+            "solution": {
+                "status": "solution_found",
+                "type": "python_package",
+                "name": "Vosk",
+                "module": "vosk",
+                "command": "python -m pip install vosk",
+                "purpose": "Распознавание речи",
+                "capabilities": [
+                    "vosk",
+                    "распознавание речи",
+                    "голосовой ввод",
+                    "голос",
+                    "речь",
+                    "микрофон",
+                    "работа с микрофоном",
+                    "проверка микрофона",
+                    "speech recognition"
+                ],
+                "implementation": [
+                    "Проверить установку Vosk",
+                    "Подключить модуль",
+                    "Проверить импорт",
+                    "Использовать в voice_input.py"
+                ],
+                "capability": "vosk"
+            },
+            "analysis": {
+                "status": "analyzed",
+                "capability": "vosk",
+                "solution_name": "Vosk",
+                "solution_type": "python_package",
+                "purpose": "Распознавание речи",
+                "matched_capability": null,
+                "steps": [
+                    "Проверить установку Vosk",
+                    "Подключить модуль",
+                    "Проверить импорт",
+                    "Использовать в voice_input.py"
+                ],
+                "next_action": "prepare_implementation"
+            }
+        }
+    ]
+}

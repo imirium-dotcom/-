@@ -1,0 +1,79 @@
+{
+    "status": "plan_created",
+    "total_capabilities": 3,
+    "plans": [
+        {
+            "capability": "files",
+            "status": "available",
+            "original_action": "use_existing",
+            "plan_status": "planned",
+            "steps": [
+                {
+                    "step": 1,
+                    "action": "use_existing",
+                    "description": "Использовать существующий модуль.",
+                    "target": "files.py",
+                    "requires_external_action": false
+                }
+            ]
+        },
+        {
+            "capability": "vosk",
+            "status": "missing_package",
+            "original_action": "install_package",
+            "plan_status": "planned",
+            "steps": [
+                {
+                    "step": 1,
+                    "action": "check_package",
+                    "description": "Проверить наличие Python-пакета.",
+                    "target": "vosk",
+                    "requires_external_action": false
+                },
+                {
+                    "step": 2,
+                    "action": "install_package",
+                    "description": "Установить необходимый Python-пакет.",
+                    "target": "vosk",
+                    "requires_external_action": true
+                },
+                {
+                    "step": 3,
+                    "action": "verify_package",
+                    "description": "Проверить успешность установки.",
+                    "target": "vosk",
+                    "requires_external_action": false
+                }
+            ]
+        },
+        {
+            "capability": "3d_generation",
+            "status": "unknown",
+            "original_action": "search_solution",
+            "plan_status": "planned",
+            "steps": [
+                {
+                    "step": 1,
+                    "action": "search_solution",
+                    "description": "Найти возможный способ реализации возможности.",
+                    "target": "3d_generation",
+                    "requires_external_action": true
+                },
+                {
+                    "step": 2,
+                    "action": "analyze_solution",
+                    "description": "Проанализировать найденное решение.",
+                    "target": "3d_generation",
+                    "requires_external_action": false
+                },
+                {
+                    "step": 3,
+                    "action": "prepare_implementation",
+                    "description": "Подготовить план реализации возможности.",
+                    "target": "3d_generation",
+                    "requires_external_action": false
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,36 @@
+{
+    "status": "completed",
+    "total_capabilities": 2,
+    "results": [
+        {
+            "capability": "files",
+            "status": "completed",
+            "steps": [
+                {
+                    "step": 1,
+                    "action": "use_existing",
+                    "target": "files.py",
+                    "result": {
+                        "status": "success",
+                        "reason": "Модуль существует: files.py"
+                    }
+                }
+            ]
+        },
+        {
+            "capability": "3d_generation",
+            "status": "completed",
+            "steps": [
+                {
+                    "step": 1,
+                    "action": "search_solution",
+                    "target": "3d_generation",
+                    "result": {
+                        "status": "requires_search",
+                        "reason": "Необходимо найти решение для возможности: 3d_generation"
+                    }
+                }
+            ]
+        }
+    ]
+}

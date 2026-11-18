@@ -1,0 +1,44 @@
+{
+  "mood": {
+    "valence": -0.25970000000000004,
+    "arousal": -0.0516,
+    "dominance": 0.2485
+  },
+  "personality": {
+    "O": 0.8,
+    "C": 0.72,
+    "E": 0.45,
+    "A": 0.72,
+    "N": 0.15
+  },
+  "goals": {
+    "rapport": 0.8,
+    "intellectual": 0.8,
+    "autonomy": 0.7,
+    "respect": 0.85,
+    "honesty": 0.9
+  },
+  "relationship": {
+    "stage": "stranger",
+    "trust": 0.0,
+    "session_count": 0,
+    "prior_session_valence": 0.0
+  },
+  "attachment": {
+    "weight": 0.0,
+    "longing": 0.0,
+    "comfort": 0.0
+  },
+  "baseline_valence": 0.0085,
+  "carried_thought": null,
+  "occ_carry": {
+    "admiration": 0.2662231875,
+    "distress": 0.41600000000000004,
+    "gratitude": 0.42932736000000005,
+    "joy": 0.4374000000000001,
+    "reproach": 0.5652499999999999,
+    "unease": 0.26,
+    "fatigue": 0.052
+  },
+  "expectation": ""
+}

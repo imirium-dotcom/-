@@ -1,0 +1,33 @@
+def send_message(event=None):
+    message = message_entry.get("1.0", "end").strip()
+
+    if not message:
+        return
+
+    chat_text.config(state="normal")
+
+    chat_text.insert(
+        "end",
+        "Вы: " + message + "\n\n"
+    )
+
+    try:
+        response = process_text(message)
+
+        chat_text.insert(
+            "end",
+            "AI Core: " + str(response) + "\n\n"
+        )
+
+    except Exception as error:
+
+        chat_text.insert(
+            "end",
+            "AI Core: Ошибка: " + str(error) + "\n\n"
+        )
+
+    chat_text.see("end")
+    chat_text.config(state="disabled")
+
+    message_entry.delete("1.0", "end")
+    message_entry.focus()

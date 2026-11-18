@@ -1,0 +1,109 @@
+{
+    "version": 1,
+    "updated": "2026-09-30T23:01:01.113268",
+    "capabilities": {
+        "files": {
+            "name": "Работа с файлами",
+            "module": "files",
+            "functions": [
+                "read_file",
+                "write_file",
+                "list_files"
+            ],
+            "category": "system",
+            "description": "Чтение, запись и просмотр файлов"
+        },
+        "actions": {
+            "name": "Выполнение действий",
+            "module": "actions",
+            "functions": [
+                "open_file",
+                "open_folder",
+                "run_program",
+                "run_command"
+            ],
+            "category": "system",
+            "description": "Открытие файлов, папок, программ и выполнение команд"
+        },
+        "memory": {
+            "name": "Память",
+            "module": "memory",
+            "functions": [
+                "remember",
+                "forget",
+                "get_all_memory"
+            ],
+            "category": "intelligence",
+            "description": "Сохранение, получение и удаление информации"
+        },
+        "context": {
+            "name": "Контекст",
+            "module": "context",
+            "functions": [
+                "add_message",
+                "get_context"
+            ],
+            "category": "intelligence",
+            "description": "Работа с текущим контекстом диалога"
+        },
+        "voice_input": {
+            "name": "Голосовой ввод",
+            "module": "voice_input",
+            "functions": [
+                "listen"
+            ],
+            "category": "communication",
+            "description": "Получение речи пользователя"
+        },
+        "voice_output": {
+            "name": "Голосовой вывод",
+            "module": "voice_output",
+            "functions": [
+                "speak"
+            ],
+            "category": "communication",
+            "description": "Озвучивание ответа"
+        },
+        "internet": {
+            "name": "Интернет",
+            "module": "internet",
+            "functions": [
+                "search_internet"
+            ],
+            "category": "information",
+            "description": "Поиск информации в интернете"
+        },
+        "language": {
+            "name": "Понимание языка",
+            "module": "language",
+            "functions": [
+                "understand"
+            ],
+            "category": "intelligence",
+            "description": "Обработка и понимание пользовательского текста"
+        },
+        "task_analyzer": {
+            "name": "Анализ задач",
+            "module": "task_analyzer",
+            "functions": [
+                "analyze_task"
+            ],
+            "category": "intelligence",
+            "description": "Определение цели, действий и требований задачи"
+        },
+        "dependency": {
+            "name": "Управление зависимостями",
+            "module": "dependency_checker",
+            "functions": [],
+            "category": "development",
+            "description": "Проверка необходимых Python-зависимостей"
+        },
+        "module_management": {
+            "name": "Управление модулями",
+            "module": "module_manager",
+            "functions": [],
+            "category": "development",
+            "description": "Управление подключением и добавлением модулей"
+        }
+    }
+}

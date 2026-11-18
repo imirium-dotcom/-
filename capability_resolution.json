@@ -1,0 +1,24 @@
+{
+    "status": "resolution_required",
+    "results": [
+        {
+            "capability": "микрофон",
+            "status": "package_available",
+            "type": "python_package",
+            "solution_found": true,
+            "solution_name": "Vosk",
+            "purpose": "Распознавание речи",
+            "matched_capability": "микрофон",
+            "implementation": [
+                "Проверить установку Vosk",
+                "Подключить модуль",
+                "Проверить импорт",
+                "Использовать в voice_input.py"
+            ],
+            "package": "vosk",
+            "install_name": "vosk",
+            "solution_command": "python -m pip install vosk",
+            "action": "use_installed_package"
+        }
+    ]
+}
